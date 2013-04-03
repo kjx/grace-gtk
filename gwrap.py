@@ -41,8 +41,8 @@ kinds = set([
     'GtkWidget *', 'cairo_t *', 'GdkWindow *', 'cairo_public void',
     'GtkOrientation', 'GtkAccelGroup*', 'GtkTextBuffer *', 'GtkTextIter *',
     'gchar *', 'gint', 'cairo_public cairo_surface_t *',
-    'cairo_public int', 'GdkScreen *', 'GtkTextMark*', 'GtkTextMark *'
-])
+    'cairo_public int', 'GdkScreen *', 'GtkTextMark*', 'GtkTextMark *',
+    'cairo_font_slant_t', 'cairo_font_weight_t', 'GtkFileChooserAction' ])
 
 included = set(['gtk/gtkaccelmap.h', 'gtk/gtkaboutdialog.h',
                 'gtk/gtkscalebutton.h', 'gtk/gtktreeitem.h',
@@ -158,6 +158,12 @@ def coerce2gtk(dest, src, pre, post):
         return '(cairo_surface_t *)(((struct GraceGtkWidget*)' + src + ')->widget)'
     elif dest == 'GtkAdjustment *':
         return 'NULL'
+    elif dest == 'cairo_font_slant_t':
+        return 'integerfromAny(' + src + ')'
+    elif dest == 'cairo_font_weight_t':
+        return 'integerfromAny(' + src + ')'
+    elif dest ==  'GtkFileChooserAction':
+        return 'integerfromAny(' + src + ')'
     elif dest == 'gint *':
         pre.append("Object tmp_obj_" + str(tmp_count) + ";")
         pre.append("int parts_" + str(tmp_count) + "[] = {0};")
@@ -419,6 +425,8 @@ def coercereturn(m, s, post=[]):
         ret = "alloc_GtkWidget((GtkWidget *)(" + s + "))"
     elif m.returns == 'GdkWindow *':
         ret = "alloc_GtkWidget((GtkWidget *)(" + s + "))"
+    elif m.returns == 'GtkWindow *':
+        ret = "alloc_GtkWindow((GtkWindow *)(" + s + "))"
     elif m.returns == 'GtkTextBuffer *':
         ret = "alloc_GtkTextBuffer((GtkTextBuffer *)(" + s + "))"
     elif m.returns == 'GtkTextMark*':
@@ -460,6 +468,8 @@ def classof(k):
         cls = 'text_tag'
     elif k.startswith('gtk_scrolled_window_'):
         cls = 'scrolled_window'
+    elif k.startswith('gtk_file_chooser_dialog_'):
+        cls = 'file_chooser_dialog'
     elif k.startswith('cairo_image_surface_create'):
         # Hacky way to switch some cairo_* methods to be found
         # on the module object itself.
