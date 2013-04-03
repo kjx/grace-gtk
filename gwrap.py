@@ -271,6 +271,8 @@ Object alloc_GtkTextBuffer(GtkTextBuffer *buf);
 Object alloc_GtkTextMark(GtkTextMark *mark);
 Object grace_gtk_text_buffer_create_tag(Object self, int argc, int *argcv,
     Object *argv, int flags);
+Object grace_cairo_text_extents(Object self, int argc, int *argcv, Object *argv, int flags);
+
 static void grace_gtk_callback_block0(GtkWidget *widget, gpointer block) {
     callmethod((Object)block, "apply", 0, NULL, NULL);
 }
@@ -589,6 +591,11 @@ if 'free' in classes:
     del classes['free']
 if 'text_buffer' in classes:
     classes['text_buffer'].append('gtk_text_buffer_create_tag')
+#kjx
+if ('cairo' in classes) and (mod == 'cairo'):
+        classes['cairo'].append('cairo_text_extents')
+
+
 for cls in classes:
     classallocators.add(MOD + cls)
     print("ClassData " + MOD + "" + cls + ";")
@@ -729,6 +736,27 @@ Object Alloc_CairoSurfaceT(cairo_surface_t *c) {
     ggw->widget = (GtkWidget *)c;
     return o;
 }
+Object grace_cairo_text_extents(Object self, int argc, int *argcv, Object *argv, int flags) {
+    if (argc < 1 || argcv[0] < 1)
+        gracedie("gtk method requires 1 arguments, got %i. Hacked Signature: cairo_text_extents(const gchar *name).", argcv[0]);
+    cairo_t *s = ((struct GraceCairoT*)self)->value;
+    cairo_text_extents_t result;
+    cairo_text_extents(s, (const gchar *)grcstring(argv[0]), &result);
+  Object params[6];
+  int partcv[1];
+  params[0] = alloc_Float64(result.x_bearing);
+  params[1] = alloc_Float64(result.y_bearing);
+  params[2] = alloc_Float64(result.width);
+  params[3] = alloc_Float64(result.height);
+  params[4] = alloc_Float64(result.x_advance);
+  params[5] = alloc_Float64(result.y_advance);
+  partcv[0] = 6;
+  return callmethodflags(grace_prelude(), "cairo_text_extents_t", 1, partcv, params, CFLAG_SELF);
+}
+
+
+
+
 """)
 
 gtk_size = len(classes) + len(enums) + 3
