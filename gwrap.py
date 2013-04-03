@@ -42,7 +42,8 @@ kinds = set([
     'GtkOrientation', 'GtkAccelGroup*', 'GtkTextBuffer *', 'GtkTextIter *',
     'gchar *', 'gint', 'cairo_public cairo_surface_t *',
     'cairo_public int', 'GdkScreen *', 'GtkTextMark*', 'GtkTextMark *',
-    'cairo_font_slant_t', 'cairo_font_weight_t', 'GtkFileChooserAction' ])
+    'cairo_font_slant_t', 'cairo_font_weight_t',
+    'GtkFileChooserAction',  'GtkWindow *' ])
 
 included = set(['gtk/gtkaccelmap.h', 'gtk/gtkaboutdialog.h',
                 'gtk/gtkscalebutton.h', 'gtk/gtktreeitem.h',
@@ -117,7 +118,7 @@ class FailedCoerce(Exception):
     pass
 
 tmp_count = 0
-def coerce2gtk(dest, src, pre, post):
+def coerce2gtk(dest, src, pre, post, hack):
     global tmp_count
     if '*' in dest:
         dest = dest.replace('\t', ' ')
@@ -134,6 +135,8 @@ def coerce2gtk(dest, src, pre, post):
         return 'integerfromAny(' + src + ')'
     elif dest == 'GtkWidget *' or dest == 'GtkWidget*':
         return '((struct GraceGtkWidget*)' + src + ')->widget'
+    elif dest == 'GtkWindow *' or dest == 'GtkWindow*':
+        return '(GtkWindow*)(((struct GraceGtkWidget*)' + src + ')->widget)'
     elif dest == 'cairo_t *':
         return '((struct GraceCairoT*)' + src + ')->value'
     elif dest == 'GdkWindow *':
@@ -164,7 +167,9 @@ def coerce2gtk(dest, src, pre, post):
         return 'integerfromAny(' + src + ')'
     elif dest ==  'GtkFileChooserAction':
         return 'integerfromAny(' + src + ')'
-    elif dest == 'gint *':
+#    elif hack == 'gtk_file_chooser_dialog_new':
+#        return 'integerfromAny(' + src + ')'
+    elif (dest == 'gint *'):
         pre.append("Object tmp_obj_" + str(tmp_count) + ";")
         pre.append("int parts_" + str(tmp_count) + "[] = {0};")
         pre.append("gint tmp_gint_" + str(tmp_count)
@@ -190,7 +195,7 @@ def doconstructor(k, m):
     casts = []
     try:
         casts = list(map(lambda x: coerce2gtk(x[0], 'argv[' + str(x[1]) +
-                                              ']', [], []),
+                                              ']', [], [], k),
                     zip(m.params, itertools.count())))
     except FailedCoerce as e:
         if m.params[0] != 'void':
@@ -426,7 +431,7 @@ def coercereturn(m, s, post=[]):
     elif m.returns == 'GdkWindow *':
         ret = "alloc_GtkWidget((GtkWidget *)(" + s + "))"
     elif m.returns == 'GtkWindow *':
-        ret = "alloc_GtkWindow((GtkWindow *)(" + s + "))"
+        ret = "alloc_GtkWidget((GtkWindow *)(" + s + "))"
     elif m.returns == 'GtkTextBuffer *':
         ret = "alloc_GtkTextBuffer((GtkTextBuffer *)(" + s + "))"
     elif m.returns == 'GtkTextMark*':
@@ -504,7 +509,7 @@ for k, m in methods.items():
     post = []
     try:
         casts = list(map(lambda x: coerce2gtk(x[0], 'argv[' + str(x[1]) +
-                                              ']', pre, post),
+                                              ']', pre, post, ""),
                     zip(m.params[1:], itertools.count())))
     except FailedCoerce as e:
         print("// Failed " + k + ": could not coerce " + e.args[0])
@@ -548,6 +553,8 @@ for cls in classes:
             classes[cls].extend(classes['container'])
     if cls == 'vbox' or cls == 'hbox':
         classes[cls].extend(classes['box'])
+    if cls == 'file_chooser_dialog':
+        classes[cls].extend(classes['dialog'])
     print("ClassData alloc_class_" + MOD + cls + "();")
     print("Object grace_" + MOD + "_as_" + cls + "(Object self,"
           + "int argc, int *argcv, Object *argv, int flags) {")
@@ -695,10 +702,27 @@ Object grace_gtk_text_buffer_create_tag(Object self, int argc, int *argcv,
     ggw->widget = (GtkWidget *)tag;
     return o;
 }
+Object grace_gtk_file_chooser_dialog_new(Object self, int argc, int *argcv,
+    Object *argv, int flags) {
+    if (argc < 1 || argcv[0] < 7)
+        gracedie("file_chooser_dialog requires 7 arguments, got %i. Signature: file_chooser_dialog(const gchar *title, GtkWindow *parent, GtkFileChooserAction  action, const gchar *first_button_text, ...).", argcv[0]);
+    GtkWidget *w = gtk_file_chooser_dialog_new(
+     (const gchar*)grcstring(argv[0]),
+     (GtkWindow*)(((struct GraceGtkWidget*)argv[1])->widget),
+      integerfromAny(argv[2]),
+     (const gchar *)grcstring(argv[3]),integerfromAny(argv[4]), 
+     (const gchar *)grcstring(argv[5]),integerfromAny(argv[6]), NULL);
+
+    Object o = alloc_obj(sizeof(struct GraceGtkWidget) - sizeof(struct Object),
+         alloc_class_GTKfile_chooser_dialog());
+    struct GraceGtkWidget *ggw = (struct GraceGtkWidget *)o;
+    ggw->widget = w;
+    return o;
+}
 """)
 elif mod == 'cairo':
     print("""
-Object alloc_CairoSurfaceT(cairo_surface_t *c) {
+Object Alloc_CairoSurfaceT(cairo_surface_t *c) {
     Object o = alloc_obj(sizeof(struct GraceGtkWidget) - sizeof(struct Object),
          alloc_class_CAIROimage_surface());
     struct GraceGtkWidget *ggw = (struct GraceGtkWidget *)o;
@@ -733,6 +757,7 @@ if mod == 'gtk':
     print("    add_Method(c, \"main_quit\", &grace_gtk_main_quit);")
     print("    add_Method(c, \"connect\", &grace_g_signal_connect);")
     print("    add_Method(c, \"text_iter\", &grace_gtk_text_iter_new);")
+    print("    add_Method(c, \"file_chooser_dialog\", &grace_gtk_file_chooser_dialog_new);")
 elif mod == 'gdk':
     print("    add_Method(c, \"cairo\", &grace_gdk_cairo_create);")
     print("    add_Method(c, \"screen_get_default\", &grace_gdk_screen_get_default);")
