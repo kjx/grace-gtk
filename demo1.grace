@@ -1,0 +1,143 @@
+// GTK+ 3 drawing example (not compatible with GTK+ 2)
+import "gtk" as gtk
+import "gdk" as gdk
+import "sys" as sys
+
+if (gtk.GTK_MAJOR_VERSION != 3) then {
+    print "Error: This example is only compatible with GTK+ 3."
+    print "drawing2.grace is the GTK+ 2 version of the drawing sample."
+    // sys.exit(1)
+}
+
+def window = gtk.window(gtk.GTK_WINDOW_TOPLEVEL)
+window.title := "Simple drawing demo"
+
+window.set_default_size(400, 300)
+window.add_events(gdk.GDK_BUTTON_PRESS_MASK)
+window.add_events(gdk.GDK_BUTTON_RELEASE_MASK)
+window.add_events(gdk.GDK_BUTTON1_MOTION_MASK)
+def button = gtk.button
+button.label := "Change colour"
+
+def vbox = gtk.box(gtk.GTK_ORIENTATION_VERTICAL, 6)
+
+def da = gtk.drawing_area
+da.set_size_request(400, 300)
+vbox.add(da)
+vbox.add(button)
+window.add(vbox)
+window.on "destroy" do { gtk.main_quit }
+def accelgroup = gtk.accel_group
+accelgroup.accel_connect(gdk.GDK_KEY_Escape, { gtk.main_quit })
+window.add_accel_group(accelgroup)
+
+da.app_paintable := true
+
+// Helper to simplify the code below
+method rectangleAt(x', y')sized(w', h')coloured(r', g', b') {
+    object {
+        def x is public, readable = x'
+        def y is public, readable = y'
+        def w is public, readable = w'
+        def h is public, readable = h'
+        def r is public, readable = r'
+        def g is public, readable = g'
+        def b is public, readable = b'
+        method draw(c) { 
+            c.set_source_rgb(r, g, b)
+            c.rectangle(x, y, w, h)
+            c.fill
+        }
+
+    }
+}
+def rectangles = [rectangleAt(20, 20)sized(50, 50)coloured(1, 0, 0)]
+
+var curR := 1
+var curG := 0
+var curB := 0
+button.on "clicked" do {
+    def tmp = curR
+    curR := curB
+    curB := curG
+    curG := tmp
+}
+
+da.on "draw" do { c->
+    for (rectangles) do {rect->
+        rect.draw(c)
+    }
+}
+
+window.on "motion-notify-event" do {e->
+    rectangles.push(rectangleAt(e.x, e.y)sized(10, 10)coloured(curR, curG, curB))
+    da.queue_draw
+}
+
+
+
+class Button.new(x',y',text) {
+  def x is readable = x'
+  def y is readable = y'
+  var width is readable := 0
+  var height is readable := 0
+  var active := false
+
+  method draw(c) {
+    c.select_font_face("Blox brk",0,0)
+    c.font_size:=50
+
+    def tx = c.text_extents(text)
+    width := tx.width
+    height := tx.height
+
+    c.move_to(x + tx.x_bearing, y - tx.y_bearing)
+
+    if (active) then {c.set_source_rgb(0,0,0)} else {c.set_source_rgb(1,1,1)}
+    c.show_text(text)
+    c.rectangle(x,
+                y,
+                tx.width,,
+                tx.height)
+    c.stroke
+  }
+  method handlePress(e) {
+    if ((e.x >= x) && (e.x <= (x+width)) && (e.y >= y) && (e.y <= (y+height))) 
+      then { 
+         active := true
+         focus := self
+         da.queue_draw
+      }
+  }
+  method handleRelease(e) { // sent only to the focused widget!
+    if ((e.x >= x) && (e.x <= (x+width)) && (e.y >= y) && (e.y <= (y+height)))
+      then { 
+           if (!active) then {return 0}   // indicates a bug?
+           print "DOIT DOIT DOINT NOW"
+           }
+    active := false  // should end up unwind-protected
+    focus := self
+    da.queue_draw
+    }
+}
+
+var focus := 0
+def myButton = Button.new(100,100,"pUSH mE")
+
+rectangles.push(myButton)
+
+
+window.on "button-press-event"  do {e->
+          myButton.handlePress(e)
+}
+
+
+window.on "button-release-event"  do {e->
+          if (focus != 0) then {focus.handleRelease(e)}
+}
+
+
+
+window.show_all
+
+gtk.main
