@@ -14,6 +14,7 @@ window.title := "Simple drawing demo"
 
 window.set_default_size(400, 300)
 window.add_events(gdk.GDK_BUTTON_PRESS_MASK)
+//window.add_events(gdk.GDK_BUTTON_RELEASE_MASK)
 window.add_events(gdk.GDK_BUTTON1_MOTION_MASK)
 def button = gtk.button
 button.label := "Change colour"
@@ -42,6 +43,13 @@ method rectangleAt(x', y')sized(w', h')coloured(r', g', b') {
         def r is public, readable = r'
         def g is public, readable = g'
         def b is public, readable = b'
+        method draw(c) { 
+            c.set_source_rgb(r, g, b)
+            c.rectangle(x, y, w, h)
+            c.fill
+        }
+        method click(e) {
+        }
     }
 }
 def rectangles = [rectangleAt(20, 20)sized(50, 50)coloured(1, 0, 0)]
@@ -71,18 +79,22 @@ button.on "clicked" do {
 da.on "draw" do { c->
     print "draw: {rectangles.size}"
     c.set_source_rgb(0,0,0)
+    print "one"
     c.rectangle(0,0,1000,1000)
+    print "two"
     c.fill
-    for (rectangles) do {rect->
-        c.set_source_rgb(rect.r, rect.g, rect.b)
-        c.rectangle(rect.x, rect.y, rect.w, rect.h)
-        c.fill
-    }
+    Print "Returning"
+    return
+
+    for (rectangles) do {rect-> rect.draw(c)}
+
+
+
     c.select_font_face("Blox brk",0,0)
     c.font_size:=100
     c.move_to(100,100)
     c.set_source_rgb(1,1,1)
-    c.show_text("Hello World")
+    c.show_text("Programmng\nWill\nEat\nItself")
     
     def tx = c.text_extents("Hello World")
 
@@ -98,12 +110,42 @@ da.on "draw" do { c->
     c.stroke
 }
 
+
 window.on "motion-notify-event" do {e->
     print "motion notify ({e.x}@{e.y})"
     rectangles.push(rectangleAt(e.x, e.y)sized(10, 10)coloured(curR, curG, curB))
     da.queue_draw
 }
 
+class Button.new(x,y,text) {
+  method draw(c) {
+    c.select_font_face("Blox brk",0,0)
+    c.font_size:=50
+    c.move_to(x,y)
+    c.set_source_rgb(1,1,1)
+    c.show_text(text)
+    
+    def tx = c.text_extents(text)
+    c.rectangle(x - tx.x_bearing,
+                y + tx.y_bearing,
+                tx.width,
+                tx.height)
+    c.stroke
+  }
+  method click(e) { 
+  }
+}
+
+// def myButton = Button.new(100,100,"Push Me")
+
+// window.on "button-release-event"  do {e->
+//   if ((e.x >= myButton.x) && (e.x <= (myButton.x+myButton.height)) &&
+//       (e.y >= myButton.y) && (e.y <= (myButton.y+myButton.width))) 
+//      then {print "BUTTON!!!"}
+// }
+
+print "showing windows"
 window.show_all
 
+print "mainloop"
 gtk.main
