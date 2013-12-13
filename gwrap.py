@@ -785,7 +785,9 @@ if mod == 'gtk':
     print("    add_Method(c, \"main_quit\", &grace_gtk_main_quit);")
     print("    add_Method(c, \"connect\", &grace_g_signal_connect);")
     print("    add_Method(c, \"text_iter\", &grace_gtk_text_iter_new);")
-    print("    add_Method(c, \"file_chooser_dialog\", &grace_gtk_file_chooser_dialog_new);")
+    print("    add_Method(c, \"file_chooser_dialog\",&grace_gtk_file_chooser_dialog_new);")
+    print("    add_Method(c, \"main_iteration\", &grace_gtk_main_iteration);")
+    print("    add_Method(c, \"events_pending\", &grace_gtk_events_pending);")
 elif mod == 'gdk':
     print("    add_Method(c, \"cairo\", &grace_gdk_cairo_create);")
     print("    add_Method(c, \"screen_get_default\", &grace_gdk_screen_get_default);")
