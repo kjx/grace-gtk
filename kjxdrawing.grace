@@ -14,7 +14,7 @@ window.title := "Simple drawing demo"
 
 window.set_default_size(400, 300)
 window.add_events(gdk.GDK_BUTTON_PRESS_MASK)
-//window.add_events(gdk.GDK_BUTTON_RELEASE_MASK)
+window.add_events(gdk.GDK_BUTTON_RELEASE_MASK)
 window.add_events(gdk.GDK_BUTTON1_MOTION_MASK)
 def button = gtk.button
 button.label := "Change colour"
@@ -57,6 +57,7 @@ def rectangles = [rectangleAt(20, 20)sized(50, 50)coloured(1, 0, 0)]
 var curR := 1
 var curG := 0
 var curB := 0
+
 button.on "clicked" do {
     def tmp = curR
     curR := curB
@@ -76,39 +77,44 @@ button.on "clicked" do {
     dialog.destroy
 }
 
+
+
+
+
 da.on "draw" do { c->
-    print "draw: {rectangles.size}"
-    c.set_source_rgb(0,0,0)
-    print "one"
-    c.rectangle(0,0,1000,1000)
-    print "two"
-    c.fill
-    Print "Returning"
-    return
 
-    for (rectangles) do {rect-> rect.draw(c)}
+     print "draw: {rectangles.size}"
+     c.set_source_rgb(0,0,0)
+     print "one"
+     c.rectangle(0,0,1000,1000)
+     print "two"
+     c.fill
+     print "Returning"
 
-
-
-    c.select_font_face("Blox brk",0,0)
-    c.font_size:=100
-    c.move_to(100,100)
-    c.set_source_rgb(1,1,1)
-    c.show_text("Programmng\nWill\nEat\nItself")
     
-    def tx = c.text_extents("Hello World")
 
-    print "x_bearing {tx.x_bearing}"
-    print "y_bearing {tx.y_bearing}"
-    print "witdh {tx.width}"
-    print "height {tx.height}"
+     for (rectangles) do {rect-> rect.draw(c)}
 
-    c.rectangle(100 - tx.x_bearing,
-                100 + tx.y_bearing,
-                tx.width,
-                tx.height)
-    c.stroke
-}
+
+     c.select_font_face("Blox brk",0,0)
+     c.font_size:=100
+     c.move_to(100,100)
+     c.set_source_rgb(1,1,1)
+     c.show_text("Programmng\nWill\nEat\nItself")
+  
+     def tx = c.text_extents("Hello World")
+
+     print "x_bearing {tx.x_bearing}"
+     print "y_bearing {tx.y_bearing}"
+     print "witdh {tx.width}"
+     print "height {tx.height}"
+
+     c.rectangle(100 - tx.x_bearing,
+                 100 + tx.y_bearing,
+                 tx.width,
+                 tx.height)
+     c.stroke
+} 
 
 
 window.on "motion-notify-event" do {e->
@@ -117,35 +123,47 @@ window.on "motion-notify-event" do {e->
     da.queue_draw
 }
 
-class Button.new(x,y,text) {
+class Button.new(x',y',text) {
+  def x is readable = x'
+  def y is readable = y'
+  var width  is readable
+  var height is readable
+
   method draw(c) {
-    c.select_font_face("Blox brk",0,0)
+    c.select_font_face("Helvetica light",0,0)
     c.font_size:=50
-    c.move_to(x,y)
+    def tx = c.text_extents(text)
+    width := tx.width
+    height := tx.height
+    c.move_to(x + tx.x_bearing, y - tx.y_bearing)
     c.set_source_rgb(1,1,1)
     c.show_text(text)
-    
-    def tx = c.text_extents(text)
-    c.rectangle(x - tx.x_bearing,
-                y + tx.y_bearing,
+
+    c.rectangle(x,
+                y,
                 tx.width,
                 tx.height)
     c.stroke
   }
   method click(e) { 
+    print "Button Clicked"
   }
+
+  rectangles.push(self)
 }
 
-// def myButton = Button.new(100,100,"Push Me")
+def myButton = Button.new(100,200,"Push Me")
 
-// window.on "button-release-event"  do {e->
-//   if ((e.x >= myButton.x) && (e.x <= (myButton.x+myButton.height)) &&
-//       (e.y >= myButton.y) && (e.y <= (myButton.y+myButton.width))) 
-//      then {print "BUTTON!!!"}
-// }
+window.on "button-release-event"  do {e->
+  if ((e.x >= myButton.x) && (e.x <= (myButton.x+myButton.height)) &&
+      (e.y >= myButton.y) && (e.y <= (myButton.y+myButton.width))) 
+     then {print "BUTTON!!!"}
+}
 
 print "showing windows"
 window.show_all
 
 print "mainloop"
 gtk.main
+
+print "down here"

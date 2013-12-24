@@ -1,8 +1,5 @@
-gtk.c
+*~
+*.gct
 *.gso
-*.c
 *.gcn
-stdin_minigrace
-drawing
-drawing2
-helloworld
+*.gso*
