@@ -1,5 +1,13 @@
 *~
 *.gct
-*.gso
-*.gcn
 *.gso*
+*.gcn
+*.gct
+stdin_minigrace
+drawing
+drawing2
+helloworld
+greet
+pngviewer
+simpleeditor
+
