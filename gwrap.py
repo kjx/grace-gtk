@@ -844,7 +844,7 @@ elif mod == 'cairo':
     print("""
 Object module_gdkaux_init();
 
-Object Alloc_CairoSurfaceT(cairo_surface_t *c) {
+Object alloc_CairoSurfaceT(cairo_surface_t *c) {
     Object o = alloc_obj(sizeof(struct GraceGtkWidget) - sizeof(struct Object),
          alloc_class_CAIROimage_surface());
     struct GraceGtkWidget *ggw = (struct GraceGtkWidget *)o;
