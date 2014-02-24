@@ -173,11 +173,6 @@ def coerce2gtk(dest, src, pre, post, hack):
         return 'integerfromAny(' + src + ')'
     elif dest ==  'GtkFileChooserAction':
         return 'integerfromAny(' + src + ')'
-<<<<<<< HEAD
-#    elif hack == 'gtk_file_chooser_dialog_new':
-#        return 'integerfromAny(' + src + ')'
-=======
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
     elif (dest == 'gint *'):
         pre.append("Object tmp_obj_" + str(tmp_count) + ";")
         pre.append("int parts_" + str(tmp_count) + "[] = {0};")
@@ -447,11 +442,7 @@ def coercereturn(m, s, post=[]):
     elif m.returns == 'GdkWindow *':
         ret = "alloc_GtkWidget((GtkWidget *)(" + s + "))"
     elif m.returns == 'GtkWindow *':
-<<<<<<< HEAD
         ret = "alloc_GtkWidget((GtkWindow *)(" + s + "))"
-=======
-        ret = "alloc_GtkWidget((GtkWidget *)(" + s + "))"
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
     elif m.returns == 'GtkTextBuffer *':
         ret = "alloc_GtkTextBuffer((GtkTextBuffer *)(" + s + "))"
     elif m.returns == 'GtkTextMark*':
@@ -611,12 +602,8 @@ if 'free' in classes:
     del classes['free']
 if 'text_buffer' in classes:
     classes['text_buffer'].append('gtk_text_buffer_create_tag')
-<<<<<<< HEAD
-#kjx
 if ('cairo' in classes) and (mod == 'cairo'):
         classes['cairo'].append('cairo_text_extents')
-=======
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
 
 
 for cls in classes:
@@ -732,7 +719,7 @@ Object grace_gtk_text_buffer_create_tag(Object self, int argc, int *argcv,
     ggw->widget = (GtkWidget *)tag;
     return o;
 }
-<<<<<<< HEAD
+
 Object grace_gtk_file_chooser_dialog_new(Object self, int argc, int *argcv,
     Object *argv, int flags) {
     if (argc < 1 || argcv[0] < 7)
@@ -750,24 +737,16 @@ Object grace_gtk_file_chooser_dialog_new(Object self, int argc, int *argcv,
     ggw->widget = w;
     return o;
 }
-=======
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
+
 static gboolean grace_gclosure_callback_gboolean(Object block) {
     Object rv = callmethod(block, "apply", 0, NULL, NULL);
     return (gboolean)istrue(rv);
 }
 static Object grace_g_timeout_add_impl(Object self, int argc, int *argcv,
-<<<<<<< HEAD
       Object *argv, int flags, int seconds) {  
 //note: ignores self! 
     if (argc < 1 || argcv[0] < 2)
         gracedie("glib method requires 2 arguments, got %i. Hacked Signature: g_timeout_addObject(interval, block).", argcv[0]);
-=======
-      Object *argv, int flags, int seconds) {
-//note: ignores self!
-    if (argc < 1 || argcv[0] < 2)
-        gracedie("glib method requires 2 arguments, got %i.", argcv[0]);
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
 
     //first arg is number of milliseconds / seconds
     Object other = argv[0];
@@ -776,7 +755,6 @@ static Object grace_g_timeout_add_impl(Object self, int argc, int *argcv,
 
     //second arg is block
     Object block = argv[1];
-<<<<<<< HEAD
 //    assertClass(block, Block);  //KJX this breaks, no idea why!
     gc_root(block); 
 
@@ -787,22 +765,10 @@ static Object grace_g_timeout_add_impl(Object self, int argc, int *argcv,
     } else {
         rv = g_timeout_add(interval,  
               G_CALLBACK(grace_gclosure_callback_gboolean), block);
-=======
-    gc_root(block);
-
-    guint rv;
-    if (seconds) {
-        rv = g_timeout_add_seconds(interval,
-              (GSourceFunc)grace_gclosure_callback_gboolean, block);
-    } else {
-        rv = g_timeout_add(interval,
-              (GSourceFunc)grace_gclosure_callback_gboolean, block);
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
     }
     return alloc_Float64(rv);
 }
 static Object grace_g_timeout_add(Object self, int argc, int *argcv,
-<<<<<<< HEAD
       Object *argv, int flags) {  
     return grace_g_timeout_add_impl(self, argc, argcv, argv, flags, 0);
 }
@@ -815,20 +781,6 @@ static Object grace_g_source_remove(Object self, int argc, int *argcv,
 //note: ignores self! 
     if (argc < 1 || argcv[0] < 1)
         gracedie("glib method requires 1 arguments, got %i. Hacked Signature: g_source_remove(tag).", argcv[0]);
-=======
-      Object *argv, int flags) {
-    return grace_g_timeout_add_impl(self, argc, argcv, argv, flags, 0);
-}
-static Object grace_g_timeout_add_seconds(Object self, int argc, int *argcv,
-      Object *argv, int flags) {
-    return grace_g_timeout_add_impl(self, argc, argcv, argv, flags, 1);
-}
-static Object grace_g_source_remove(Object self, int argc, int *argcv,
-      Object *argv, int flags) {
-//note: ignores self!
-    if (argc < 1 || argcv[0] < 1)
-        gracedie("glib method requires 1 arguments, got %i.", argcv[0]);
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
 
     //first arg is tag returned by e.g. g_timeout_add
     Object other = argv[0];
@@ -838,7 +790,7 @@ static Object grace_g_source_remove(Object self, int argc, int *argcv,
     gboolean rv = g_source_remove(tag);
     return alloc_Boolean(rv);
 }
-<<<<<<< HEAD
+
 static Object grace_sqrt(Object self, int argc, int *argcv,
       Object *argv, int flags, int seconds) {  
 //note: ignores self! 
@@ -854,7 +806,7 @@ static Object grace_sqrt(Object self, int argc, int *argcv,
     return alloc_Float64(rv);
 }
 
-=======
+
 static void displayUnsupportedWarning() {
     if (getenv("GRACE_GTK_DISABLE_WARNING"))
         // Welcome, readers of the source!
@@ -886,7 +838,7 @@ static void displayUnsupportedWarning() {
         exit(1);
     }
 }
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
+
 """)
 elif mod == 'cairo':
     print("""
@@ -949,19 +901,13 @@ if mod == 'gtk':
     print("    add_Method(c, \"main_quit\", &grace_gtk_main_quit);")
     print("    add_Method(c, \"connect\", &grace_g_signal_connect);")
     print("    add_Method(c, \"text_iter\", &grace_gtk_text_iter_new);")
-<<<<<<< HEAD
     print("    add_Method(c, \"file_chooser_dialog\",&grace_gtk_file_chooser_dialog_new);")
-=======
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
     print("    add_Method(c, \"main_iteration\", &grace_gtk_main_iteration);")
     print("    add_Method(c, \"events_pending\", &grace_gtk_events_pending);")
     print("    add_Method(c, \"timeout_add\", &grace_g_timeout_add);")
     print("    add_Method(c, \"timeout_add_seconds\", &grace_g_timeout_add_seconds);")
     print("    add_Method(c, \"source_remove\", &grace_g_source_remove);")
-<<<<<<< HEAD
     print("    add_Method(c, \"sqrt\", &grace_sqrt);")
-=======
->>>>>>> 00f1725e4950562d6451fd0a68f7ab36081ff5d7
 elif mod == 'gdk':
     print("    add_Method(c, \"cairo\", &grace_gdk_cairo_create);")
     print("    add_Method(c, \"screen_get_default\", &grace_gdk_screen_get_default);")
